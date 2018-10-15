@@ -8,6 +8,7 @@
 #include "Eigen-3.3/Eigen/Core"
 #include "Eigen-3.3/Eigen/QR"
 #include "json.hpp"
+#include "spline.h" // downloaded from https://kluge.in-chemnitz.de/opensource/spline/
 
 using namespace std;
 
@@ -243,11 +244,14 @@ int main() {
           	vector<double> next_y_vals;
 
 		// Initialer Test -> Auto soll gerade aus mit 50 MPH fahren
-                double dist_inc = 0.44704;
+                double dist_inc = 1.44704;
     		for(int i = 0; i < 50; i++)
     		{
-  		   next_x_vals.push_back(car_x+(dist_inc*i)*cos(deg2rad(car_yaw)));
-          	   next_y_vals.push_back(car_y+(dist_inc*i)*sin(deg2rad(car_yaw)));
+		   double next_s = car_s + (i+1)*dist_inc;
+		   double next_d = 6; // Lane 2 of 3
+		   vector<double> xy = getXY(next_s, next_d, map_waypoints_s, map_waypoints_x, map_waypoints_y);
+  		   next_x_vals.push_back( xy[0] );
+          	   next_y_vals.push_back( xy[1] );
     		}
 
           	// TODO: define a path made up of (x,y) points that the car will visit sequentially every .02 seconds
