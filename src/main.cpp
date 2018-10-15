@@ -130,10 +130,38 @@ int main() {
 		// -----------------------------------------------------------------------------------
 		// Start of my code
 
-		// Sensor Fusion
-		// ToDo
-
 		int prev_size = previous_path_x.size();
+		if(prev_size > 0) {
+		  car_s = end_path_s;
+		}
+
+		// Sensor Fusion
+		bool too_close = false; // is car is to close to another car
+
+		// find ref_v to use
+		for (int i=0; i< sensor_fusion.size(); i++) {
+		  // car is in my lane
+		  float d = sensor_fusion[i][6];
+		  if(d < (2+4*lane+2) && d > (2+4*lane-2) ) {
+		    double vx = sensor_fusion[i][3];
+		    double vy = sensor_fusion[i][4];
+		    double check_speed = sqrt(pow(vx,2)+pow(vy,2));
+		    double check_car_s = sensor_fusion[i][5];
+
+		    check_car_s += ((double)prev_size*0.02*check_speed);
+		    // check s values greater than mine and s gap
+		    if((check_car_s > car_s) && ((check_car_s-car_s) < 30) ) {
+		      too_close = true;
+		    }
+		  }
+		}
+
+		if(too_close) {
+		  ref_vel -= 0.224;
+		}
+		else if(ref_vel < 49.5) {
+		  ref_vel += .224;
+		}
 
  		// Create a list of widely spaced (x,y) waypoints, evenly spaced at 30m
 		// Later we will interpolate these waypoints with a spline and fill it in with more points
@@ -201,6 +229,19 @@ int main() {
 
 		// create a spline
 		tk::spline s;
+
+		// sort ptsx and ptsy for set_points
+		// source: www.quora.com/How-do-I-sort-array-of-pair-int-int-in-C++-according-to-the-first-and-the-second-elemen
+		vector<pair <double, double> > pts;
+		for(int i=0; i<ptsx.size(); i++) {
+		  pts.push_back(make_pair(ptsx[i], ptsy[i]));
+		}
+		sort(pts.begin(),pts.end());
+		for(int i=0; i<ptsx.size(); i++) {
+		  ptsx[i] = pts[i].first;
+		  ptsy[i] = pts[i].second;
+		}
+		
 
 		// set (x,y) points to the spline
 		s.set_points(ptsx, ptsy);
