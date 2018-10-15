@@ -1,6 +1,8 @@
 // Helper functions for Path Planning Project
 
-# include "tools.h"
+#include "tools.h"
+
+using std::vector;
 
 Tools::Tools() {}
 
@@ -55,9 +57,9 @@ int Tools::NextWaypoint(double x, double y, double theta, const vector<double> &
 	double heading = atan2((map_y-y),(map_x-x));
 
 	double angle = fabs(theta-heading);
-  angle = min(2*pi() - angle, angle);
+  angle = min(2*M_PI - angle, angle);
 
-  if(angle > pi()/4)
+  if(angle > M_PI/4)
   {
     closestWaypoint++;
   if (closestWaypoint == maps_x.size())
@@ -143,7 +145,7 @@ vector<double> Tools::getXY(double s, double d, const vector<double> &maps_s, co
 	double seg_x = maps_x[prev_wp]+seg_s*cos(heading);
 	double seg_y = maps_y[prev_wp]+seg_s*sin(heading);
 
-	double perp_heading = heading-pi()/2;
+	double perp_heading = heading-M_PI/2;
 
 	double x = seg_x + d*cos(perp_heading);
 	double y = seg_y + d*sin(perp_heading);
