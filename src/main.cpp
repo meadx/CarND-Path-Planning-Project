@@ -254,13 +254,11 @@ int main() {
 		// Define the actual (x,y) points we will use for the planner
 		vector<double> next_x_vals;
 		vector<double> next_y_vals;
-		vector<double> next_vals;
-
+		
 		// Start with all of the previous path points from last time
 		for(int i=0; i<previous_path_x.size(); i++) {
-		  //next_x_vals.push_back(previous_path_x[i]);
-		  //next_y_vals.push_back(previous_path_y[i]);
-		  next_vals.push_back([previous_path_x[i],previous_path_y[i]]);
+		  next_x_vals.push_back(previous_path_x[i]);
+		  next_y_vals.push_back(previous_path_y[i]);
 		}
 
 		// Calculate how to break up sline points so that we travel at our desired
@@ -288,14 +286,18 @@ int main() {
 		  x_point += ref_x;
 		  y_point += ref_y;
 
-		  //next_x_vals.push_back(x_point);
-		  //next_y_vals.push_back(y_point);
-		  next_vals.push_back([x_point,y_point]);
+		  next_x_vals.push_back(x_point);
+		  next_y_vals.push_back(y_point);
 		}
 		
-		for(int i=0; i<next_vals.size(), i++) {
-		  next_x_vals.push_back(next_vals[i][0]);
-		  next_y_vals.push_back(next_vals[i][1]);
+		vector<pair <double, double> > next_vals;
+		for(int i=0; i<next_x_vals.size(); i++) {
+		  next_vals.push_back(make_pair(next_x_vals[i],next_y_vals[i]));
+		}
+
+		for(int i=0; i<next_vals.size(); i++) {
+		  next_x_vals[i] = next_vals[i].first;
+		  next_y_vals[i] = next_vals[i].second;
 		}
 
 		// -----------------------------------------------------------------------------------
