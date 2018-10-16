@@ -37,6 +37,9 @@ public:
   // Transform from Frenet s,d coordinates to Cartesian x,y
   vector<double> getXY(double s, double d, const vector<double> &maps_s, const vector<double> &maps_x, const vector<double> &maps_y);
 
+  // Sensor Fusion
+  bool sensorFusion(vector<double> sensor_fusion, vector<double> car, int prev_size, int lane);
+  
   // Plan the path
   vector<pair <double, double> > planPath(vector<double> car, vector<double> previous_path_x, vector<double> previous_path_y, vector<double> map_waypoints_x, vector<double> map_waypoints_y, vector<double> map_waypoints_s, int lane);
 
