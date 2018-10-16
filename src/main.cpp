@@ -104,6 +104,7 @@ int main() {
           // j[1] is the data JSON object
           
         	// Main car's localization Data
+		// All data is written into vector car
 		vector<double> car;
           	car.push_back(j[1]["x"]); // 0 - car_x
           	car.push_back(j[1]["y"]); // 1 - car_y
@@ -128,34 +129,19 @@ int main() {
 		// TODO: define a path made up of (x,y) points that the car will visit sequentially every .02 seconds
 		// -----------------------------------------------------------------------------------
 		// Start of my code
+		// Length of the previous path
 		int prev_size = previous_path_x.size();
 		
+		// Set car's s position
 		if(prev_size > 0) {
 		  car[2] = end_path_s;
 		}
 
-		// ----------------------------------------------
+		// ----------------------------------------------------------------------------------------
 		// Sensor Fusion
-		bool too_close = false; // is car is to close to another car
-
-		// find ref_v to use
-		for (int i=0; i< sensor_fusion.size(); i++) {
-		  // car is in my lane
-		  float d = sensor_fusion[i][6];
-		  if(d < (2+4*lane+2) && d > (2+4*lane-2) ) {
-		    double vx = sensor_fusion[i][3];
-		    double vy = sensor_fusion[i][4];
-		    double check_speed = sqrt(pow(vx,2)+pow(vy,2));
-		    double check_car_s = sensor_fusion[i][5];
-
-		    check_car_s += ((double)prev_size*0.02*check_speed);
-		    // check s values greater than mine and s gap
-		    if((check_car_s > car[2]) && ((check_car_s-car[2]) < 30) ) {
-		      too_close = true;
-		    }
-		  }
-		}
-
+		// true if car is to close to another car
+		bool too_close = tools.sensorFusion(vector<double> sensor_fusion, vector<double> car, int prev_size, int lane); 
+		
 		if(too_close) {
 		  ref_vel -= 0.224;
 		}
@@ -163,17 +149,19 @@ int main() {
 		  ref_vel += .224;
 		}
 
-		//vector<pair <double, double> > next_vals;
+		// --------------------------------------------------------------------------------------
+		// Path Planning
 		vector<double> next_x_vals;
 		vector<double> next_y_vals;
  		auto next_vals = tools.planPath(car,previous_path_x,previous_path_y,map_waypoints_x,map_waypoints_y,map_waypoints_s, lane);
 
+		// Split next_vals into x and y vals
 		for(int i=0; i<next_vals.size(); i++) {
 		  next_x_vals.push_back(next_vals[i].first);
 		  next_y_vals.push_back(next_vals[i].second);
 		}
 
-		// -----------------------------------------------------------------------------------
+		// ##################################################################################
 		// End of my code
 		
           	msgJson["next_x"] = next_x_vals;
