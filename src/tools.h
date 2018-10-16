@@ -9,6 +9,10 @@ using namespace std;
 
 class Tools {
 public:
+
+  int lane; // initially car is on lane the middle lane 1 - lane 0 is the left lane - lane 2 is the right lane
+  double ref_vel;  // reference velocitiy in mph
+
   /**
   * Constructor.
   */
@@ -17,7 +21,10 @@ public:
   /**
   * Destructor.
   */
-  virtual ~Tools();
+  ~Tools();
+
+  // init
+  void init();
 
   // calculation of degree to radians
   double deg2rad(double x);
@@ -38,10 +45,10 @@ public:
   vector<double> getXY(double s, double d, const vector<double> &maps_s, const vector<double> &maps_x, const vector<double> &maps_y);
 
   // Sensor Fusion
-  bool sensorFusion(vector< vector<double> > sensor_fusion, vector<double> car, int prev_size, int lane);
+  bool sensorFusion(vector< vector<double> > sensor_fusion, vector<double> car, int prev_size);
   
   // Plan the path
-  vector<pair <double, double> > planPath(vector<double> car, vector<double> previous_path_x, vector<double> previous_path_y, vector<double> map_waypoints_x, vector<double> map_waypoints_y, vector<double> map_waypoints_s, int lane);
+  vector<pair <double, double> > planPath(vector<double> car, vector<double> previous_path_x, vector<double> previous_path_y, vector<double> map_waypoints_x, vector<double> map_waypoints_y, vector<double> map_waypoints_s);
 
 };
 

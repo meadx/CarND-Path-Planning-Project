@@ -9,6 +9,13 @@ Tools::Tools() {}
 Tools::~Tools() {}
 
 // -------------------------------------------------------------------------------------------
+void Tools::init() {
+  this->lane = 1;
+  this->ref_vel = 49.5;
+}
+
+
+// -------------------------------------------------------------------------------------------
 // TODO
 double Tools::deg2rad(double x)
 {
@@ -164,7 +171,7 @@ vector<double> Tools::getXY(double s, double d, const vector<double> &maps_s, co
 
 // -------------------------------------------------------------------------------------------
 // Sensor Fusion
-bool Tools::sensorFusion(vector< vector<double> > sensor_fusion, vector<double> car, int prev_size, int lane)
+bool Tools::sensorFusion(vector< vector<double> > sensor_fusion, vector<double> car, int prev_size)
 {
 	bool too_close = false; // is car is to close to another car
 	
@@ -192,10 +199,10 @@ bool Tools::sensorFusion(vector< vector<double> > sensor_fusion, vector<double> 
 
 // -------------------------------------------------------------------------------------------
 // Plan the path
-vector<pair <double, double> > Tools::planPath(vector<double> car, vector<double> previous_path_x, vector<double> previous_path_y, vector<double> map_waypoints_x, vector<double> map_waypoints_y, vector<double> map_waypoints_s, int lane)
+vector<pair <double, double> > Tools::planPath(vector<double> car, vector<double> previous_path_x, vector<double> previous_path_y, vector<double> map_waypoints_x, vector<double> map_waypoints_y, vector<double> map_waypoints_s)
 {
-	Tools tools;
-	double ref_vel = 49.5;
+	//Tools tools;
+	//ref_vel = 49.5;
 	int prev_size = previous_path_x.size();
 	
 	// Create a list of widely spaced (x,y) waypoints, evenly spaced at 30m
@@ -206,7 +213,7 @@ vector<pair <double, double> > Tools::planPath(vector<double> car, vector<double
 	// reference x,y, yaw state
 	double ref_x = car[0];
 	double ref_y = car[1];
-	double ref_yaw = tools.deg2rad(car[4]);
+	double ref_yaw = deg2rad(car[4]);
 
 	// if previous size is almost empty, use the car as starting reference
 	if(prev_size < 2) {
@@ -240,11 +247,11 @@ vector<pair <double, double> > Tools::planPath(vector<double> car, vector<double
 	}
 
 	// in frenet add evenly 30m spaced points ahead of the starting reference
-	vector<double> next_wp0 = tools.getXY(car[2]+30,(2+4*lane),map_waypoints_s,
+	vector<double> next_wp0 = getXY(car[2]+30,(2+4*lane),map_waypoints_s,
 							map_waypoints_x,map_waypoints_y);
-	vector<double> next_wp1 = tools.getXY(car[2]+60,(2+4*lane),map_waypoints_s,
+	vector<double> next_wp1 = getXY(car[2]+60,(2+4*lane),map_waypoints_s,
 							map_waypoints_x,map_waypoints_y);
-	vector<double> next_wp2 = tools.getXY(car[2]+90,(2+4*lane),map_waypoints_s,
+	vector<double> next_wp2 = getXY(car[2]+90,(2+4*lane),map_waypoints_s,
 							map_waypoints_x,map_waypoints_y);
 
 	ptsx.push_back(next_wp0[0]);

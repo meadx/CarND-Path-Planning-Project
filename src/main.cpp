@@ -41,6 +41,7 @@ int main() {
 	
   // helper funktions	
   Tools tools;
+  tools.init();
 
   // Load up map values for waypoint's x,y,s and d normalized normal vectors
   vector<double> map_waypoints_x;
@@ -78,13 +79,13 @@ int main() {
   }
   
   // initially car is on lane the middle lane 1 - lane 0 is the left lane - lane 2 is the right lane
-  int lane = 1; 
+  //int lane = 1; 
 
   // reference velocitiy in mph
-  double ref_vel = 49.5;  // TODO ist doppelt!
+  //double ref_vel = 49.5;  // TODO ist doppelt!
 
   // tools, lane, ref_vel added
-  h.onMessage([&lane,&ref_vel,&tools,&map_waypoints_x,&map_waypoints_y,&map_waypoints_s,&map_waypoints_dx,&map_waypoints_dy](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
+  h.onMessage([&tools,&map_waypoints_x,&map_waypoints_y,&map_waypoints_s,&map_waypoints_dx,&map_waypoints_dy](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
                      uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
@@ -140,20 +141,20 @@ int main() {
 		// ----------------------------------------------------------------------------------------
 		// Sensor Fusion
 		// true if car is to close to another car
-		bool too_close = tools.sensorFusion(sensor_fusion, car, prev_size, lane); 
+		bool too_close = tools.sensorFusion(sensor_fusion, car, prev_size); 
 		
 		if(too_close) {
-		  ref_vel -= 0.224;
+		  tools.ref_vel -= 0.224;
 		}
-		else if(ref_vel < 49.5) {
-		  ref_vel += .224;
+		else if(tools.ref_vel < 49.5) {
+		  tools.ref_vel += .224;
 		}
 
 		// --------------------------------------------------------------------------------------
 		// Path Planning
 		vector<double> next_x_vals;
 		vector<double> next_y_vals;
- 		auto next_vals = tools.planPath(car,previous_path_x,previous_path_y,map_waypoints_x,map_waypoints_y,map_waypoints_s, lane);
+ 		auto next_vals = tools.planPath(car,previous_path_x,previous_path_y,map_waypoints_x,map_waypoints_y,map_waypoints_s);
 
 		// Split next_vals into x and y vals
 		for(int i=0; i<next_vals.size(); i++) {
