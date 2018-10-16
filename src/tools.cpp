@@ -9,6 +9,13 @@ Tools::Tools() {}
 Tools::~Tools() {}
 
 // -------------------------------------------------------------------------------------------
+// TODO
+double deg2rad(double x)
+{
+	return x * M_PI / 180;
+}
+
+// -------------------------------------------------------------------------------------------
 // Calculate the distance between 2 points
 double Tools::distance(double x1, double y1, double x2, double y2)
 {
@@ -157,8 +164,10 @@ vector<double> Tools::getXY(double s, double d, const vector<double> &maps_s, co
 
 // -------------------------------------------------------------------------------------------
 // Plan the path
-vector<pair <double, double> > Tools::planPath(vector<double> car, auto previous_path_x, auto previous_path_y, vector<double> map_waypoints_x, vector<double> map_waypoints_y, vector<double> map_waypoints_s)
+vector<pair <double, double> > Tools::planPath(vector<double> car, auto previous_path_x, auto previous_path_y, vector<double> map_waypoints_x, vector<double> map_waypoints_y, vector<double> map_waypoints_s, int lane)
 {
+	Tools tools;
+	double ref_vel = 49.5;
 	int prev_size = previous_path_x.size();
 	
 	// Create a list of widely spaced (x,y) waypoints, evenly spaced at 30m
@@ -169,7 +178,7 @@ vector<pair <double, double> > Tools::planPath(vector<double> car, auto previous
 	// reference x,y, yaw state
 	double ref_x = car[0];
 	double ref_y = car[1];
-	double ref_yaw = deg2rad(car[4]);
+	double ref_yaw = tools.deg2rad(car[4]);
 
 	// if previous size is almost empty, use the car as starting reference
 	if(prev_size < 2) {

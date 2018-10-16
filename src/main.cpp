@@ -18,7 +18,7 @@ using json = nlohmann::json;
 
 // For converting back and forth between radians and degrees.
 constexpr double pi() { return M_PI; }
-double deg2rad(double x) { return x * pi() / 180; }
+//double deg2rad(double x) { return x * pi() / 180; }
 double rad2deg(double x) { return x * 180 / pi(); }
 
 // Checks if the SocketIO event has JSON data.
@@ -81,10 +81,10 @@ int main() {
   int lane = 1; 
 
   // reference velocitiy in mph
-  double ref_vel = 49.5;
+  double ref_vel = 49.5;  // TODO ist doppelt!
 
   // tools, lane, ref_vel added
-  h.onMessage([&lane,&ref_vel,&tools, &map_waypoints_x,&map_waypoints_y,&map_waypoints_s,&map_waypoints_dx,&map_waypoints_dy](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
+  h.onMessage([&lane,&ref_vel,&tools,&map_waypoints_x,&map_waypoints_y,&map_waypoints_s,&map_waypoints_dx,&map_waypoints_dy](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
                      uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
@@ -128,7 +128,7 @@ int main() {
 		// TODO: define a path made up of (x,y) points that the car will visit sequentially every .02 seconds
 		// -----------------------------------------------------------------------------------
 		// Start of my code
-
+		int prev_size = previous_path_x.size();
 		
 		if(prev_size > 0) {
 		  car[2] = end_path_s;
@@ -163,7 +163,10 @@ int main() {
 		  ref_vel += .224;
 		}
 
- 		next_vals = Tools::planPath(car,previous_path_x,previous_path_y,map_waypoints_x,map_waypoints_y,map_waypoints_s);
+		//vector<pair <double, double> > next_vals;
+		vector<double> next_x_vals;
+		vector<double> next_y_vals;
+ 		auto next_vals = tools.planPath(car,previous_path_x,previous_path_y,map_waypoints_x,map_waypoints_y,map_waypoints_s, lane);
 
 		for(int i=0; i<next_vals.size(); i++) {
 		  next_x_vals[i] = next_vals[i].first;

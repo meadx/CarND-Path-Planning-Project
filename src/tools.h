@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <math.h>
+#include "spline.h"
 
 using namespace std;
 
@@ -17,6 +18,9 @@ public:
   * Destructor.
   */
   virtual ~Tools();
+
+  // calculation of degree to radians
+  double deg2rad(double x);
 
   // Calculate the distance between 2 points
   double distance(double x1, double y1, double x2, double y2);
@@ -34,7 +38,7 @@ public:
   vector<double> getXY(double s, double d, const vector<double> &maps_s, const vector<double> &maps_x, const vector<double> &maps_y);
 
   // Plan the path
-  vector<pair <double, double> > Tools::planPath(vector<double> car, auto previous_path_x, auto previous_path_y, vector<double> map_waypoints_x, vector<double> map_waypoints_y, vector<double> map_waypoints_s);
+  vector<pair <double, double> > planPath(vector<double> car, auto previous_path_x, auto previous_path_y, vector<double> map_waypoints_x, vector<double> map_waypoints_y, vector<double> map_waypoints_s, int lane);
 
 };
 
