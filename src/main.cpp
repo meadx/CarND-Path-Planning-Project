@@ -193,7 +193,7 @@ int main() {
 
 		  double ref_x_prev = previous_path_x[prev_size-2];
 		  double ref_y_prev = previous_path_y[prev_size-2];
-		  ref_yaw = atan2(ref_y - ref_y_prev, ref_x - ref_y_prev);
+		  ref_yaw = atan2(ref_y - ref_y_prev, ref_x - ref_x_prev);
 
 		  // use two points that make the path tangent to the previous path's end point
 		  ptsx.push_back(ref_x_prev);
@@ -223,25 +223,28 @@ int main() {
 		  // shift car reference angle to 0 degrees
 		  double shift_x = ptsx[i]-ref_x;
 		  double shift_y = ptsy[i]-ref_y;
+		  
 		  ptsx[i] = (shift_x*cos(0-ref_yaw)-shift_y*sin(0-ref_yaw));
-		  ptsy[i] = (shift_y*sin(0-ref_yaw)-shift_y*cos(0-ref_yaw));
+		  ptsy[i] = (shift_x*sin(0-ref_yaw)+shift_y*cos(0-ref_yaw));
 		}		
 
 		// create a spline
 		tk::spline s;
 
+		/*
 		// sort ptsx and ptsy for set_points
 		// source: www.quora.com/How-do-I-sort-array-of-pair-int-int-in-C++-according-to-the-first-and-the-second-elemen
 		vector<pair <double, double> > pts;
 		for(int i=0; i<ptsx.size(); i++) {
+		  cout << "ptsx before: " << ptsx[i] << endl;
 		  pts.push_back(make_pair(ptsx[i], ptsy[i]));
 		}
 		sort(pts.begin(),pts.end());
-		for(int i=0; i<ptsx.size(); i++) {
+		for(int i=0; i<pts.size(); i++) {
 		  ptsx[i] = pts[i].first;
+		  cout << "ptsx after: " << ptsx[i] << endl;
 		  ptsy[i] = pts[i].second;
-		}
-		
+		}*/
 
 		// set (x,y) points to the spline
 		s.set_points(ptsx, ptsy);
@@ -283,6 +286,12 @@ int main() {
 
 		  next_x_vals.push_back(x_point);
 		  next_y_vals.push_back(y_point);
+		}
+
+		for(int i=0; i<next_x_vals.size();i++) {
+
+		  cout << next_x_vals[i] << next_y_vals[i] << endl;
+
 		}
 
           	// TODO: define a path made up of (x,y) points that the car will visit sequentially every .02 seconds
