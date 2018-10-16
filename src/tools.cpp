@@ -163,6 +163,34 @@ vector<double> Tools::getXY(double s, double d, const vector<double> &maps_s, co
 
 
 // -------------------------------------------------------------------------------------------
+// Sensor Fusion
+bool Tools::sensorFusion(vector<double> sensor_fusion, vector<double> car, int prev_size, int lane)
+{
+	bool too_close = false; // is car is to close to another car
+	
+	// find ref_v to use
+	for (int i=0; i< sensor_fusion.size(); i++) {
+	  // car is in my lane
+	  float d = sensor_fusion[i][6];
+	  if(d < (2+4*lane+2) && d > (2+4*lane-2) ) {
+	    double vx = sensor_fusion[i][3];
+	    double vy = sensor_fusion[i][4];
+	    double check_speed = sqrt(pow(vx,2)+pow(vy,2));
+	    double check_car_s = sensor_fusion[i][5];
+
+	    check_car_s += ((double)prev_size*0.02*check_speed);
+	    // check s values greater than mine and s gap
+	    if((check_car_s > car[2]) && ((check_car_s-car[2]) < 30) ) {
+	      too_close = true;
+	    }
+	  }
+	}
+	
+	return too_close;
+}
+
+
+// -------------------------------------------------------------------------------------------
 // Plan the path
 vector<pair <double, double> > Tools::planPath(vector<double> car, vector<double> previous_path_x, vector<double> previous_path_y, vector<double> map_waypoints_x, vector<double> map_waypoints_y, vector<double> map_waypoints_s, int lane)
 {
