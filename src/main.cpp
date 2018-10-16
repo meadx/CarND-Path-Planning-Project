@@ -169,8 +169,8 @@ int main() {
  		auto next_vals = tools.planPath(car,previous_path_x,previous_path_y,map_waypoints_x,map_waypoints_y,map_waypoints_s, lane);
 
 		for(int i=0; i<next_vals.size(); i++) {
-		  next_x_vals[i] = next_vals[i].first;
-		  next_y_vals[i] = next_vals[i].second;
+		  next_x_vals.push_back(next_vals[i].first);
+		  next_y_vals.push_back(next_vals[i].second);
 		}
 
 		// -----------------------------------------------------------------------------------

@@ -10,7 +10,7 @@ Tools::~Tools() {}
 
 // -------------------------------------------------------------------------------------------
 // TODO
-double deg2rad(double x)
+double Tools::deg2rad(double x)
 {
 	return x * M_PI / 180;
 }
@@ -164,7 +164,7 @@ vector<double> Tools::getXY(double s, double d, const vector<double> &maps_s, co
 
 // -------------------------------------------------------------------------------------------
 // Plan the path
-vector<pair <double, double> > Tools::planPath(vector<double> car, auto previous_path_x, auto previous_path_y, vector<double> map_waypoints_x, vector<double> map_waypoints_y, vector<double> map_waypoints_s, int lane)
+vector<pair <double, double> > Tools::planPath(vector<double> car, vector<double> previous_path_x, vector<double> previous_path_y, vector<double> map_waypoints_x, vector<double> map_waypoints_y, vector<double> map_waypoints_s, int lane)
 {
 	Tools tools;
 	double ref_vel = 49.5;
