@@ -123,10 +123,7 @@ int main() {
 
           	json msgJson;
 
-		// ist weiter unten erneut im quellcode
-          	//vector<double> next_x_vals;
-          	//vector<double> next_y_vals;
-
+		// TODO: define a path made up of (x,y) points that the car will visit sequentially every .02 seconds
 		// -----------------------------------------------------------------------------------
 		// Start of my code
 
@@ -135,6 +132,7 @@ int main() {
 		  car_s = end_path_s;
 		}
 
+		// ----------------------------------------------
 		// Sensor Fusion
 		bool too_close = false; // is car is to close to another car
 
@@ -167,6 +165,7 @@ int main() {
 		// Later we will interpolate these waypoints with a spline and fill it in with more points
 		vector<double> ptsx;
 		vector<double> ptsy;
+		//vector<double> pts;
 
 		// reference x,y, yaw states
 		double ref_x = car_x;
@@ -184,6 +183,7 @@ int main() {
 
 		  ptsy.push_back(prev_car_y);
 		  ptsy.push_back(car_y);
+			
 		}
 		// use the previous path's end point as starting reference
 		else {
@@ -219,6 +219,8 @@ int main() {
 		ptsy.push_back(next_wp1[1]);
 		ptsy.push_back(next_wp2[1]);
 
+		// ----------------------------
+		// Convert ptsx and ptsy to local coordinate system
 		for(int i=0; i<ptsx.size(); i++) {
 		  // shift car reference angle to 0 degrees
 		  double shift_x = ptsx[i]-ref_x;
@@ -252,14 +254,16 @@ int main() {
 		// Define the actual (x,y) points we will use for the planner
 		vector<double> next_x_vals;
 		vector<double> next_y_vals;
+		vector<double> next_vals;
 
 		// Start with all of the previous path points from last time
 		for(int i=0; i<previous_path_x.size(); i++) {
-		  next_x_vals.push_back(previous_path_x[i]);
-		  next_y_vals.push_back(previous_path_y[i]);
+		  //next_x_vals.push_back(previous_path_x[i]);
+		  //next_y_vals.push_back(previous_path_y[i]);
+		  next_vals.push_back([previous_path_x[i],previous_path_y[i]]);
 		}
 
-		// Calculate how to break up sline points so that we traver at our desired
+		// Calculate how to break up sline points so that we travel at our desired
 		double target_x = 30.0;
 		double target_y = s(target_x);
 		double target_dist = sqrt(pow(target_x,2)+pow(target_y,2));
@@ -284,17 +288,19 @@ int main() {
 		  x_point += ref_x;
 		  y_point += ref_y;
 
-		  next_x_vals.push_back(x_point);
-		  next_y_vals.push_back(y_point);
+		  //next_x_vals.push_back(x_point);
+		  //next_y_vals.push_back(y_point);
+		  next_vals.push_back([x_point,y_point]);
+		}
+		
+		for(int i=0; i<next_vals.size(), i++) {
+		  next_x_vals.push_back(next_vals[i][0]);
+		  next_y_vals.push_back(next_vals[i][1]);
 		}
 
-		for(int i=0; i<next_x_vals.size();i++) {
-
-		  cout << next_x_vals[i] << next_y_vals[i] << endl;
-
-		}
-
-          	// TODO: define a path made up of (x,y) points that the car will visit sequentially every .02 seconds
+		// -----------------------------------------------------------------------------------
+		// End of my code
+		
           	msgJson["next_x"] = next_x_vals;
           	msgJson["next_y"] = next_y_vals;
 
