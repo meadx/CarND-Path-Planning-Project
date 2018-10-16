@@ -140,7 +140,7 @@ int main() {
 		// ----------------------------------------------------------------------------------------
 		// Sensor Fusion
 		// true if car is to close to another car
-		bool too_close = tools.sensorFusion(vector<double> sensor_fusion, vector<double> car, int prev_size, int lane); 
+		bool too_close = tools.sensorFusion(sensor_fusion, car, prev_size, lane); 
 		
 		if(too_close) {
 		  ref_vel -= 0.224;

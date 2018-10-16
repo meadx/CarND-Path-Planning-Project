@@ -164,7 +164,7 @@ vector<double> Tools::getXY(double s, double d, const vector<double> &maps_s, co
 
 // -------------------------------------------------------------------------------------------
 // Sensor Fusion
-bool Tools::sensorFusion(vector<double> sensor_fusion, vector<double> car, int prev_size, int lane)
+bool Tools::sensorFusion(vector< vector<double> > sensor_fusion, vector<double> car, int prev_size, int lane)
 {
 	bool too_close = false; // is car is to close to another car
 	
