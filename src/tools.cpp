@@ -12,7 +12,7 @@ Tools::~Tools() {}
 // -------------------------------------------------------------------------------------------
 void Tools::init() {
   this->lane = 1;
-  this->ref_vel = 49.5;
+  this->ref_vel = 49.8;
 }
 
 
@@ -175,7 +175,7 @@ vector<double> Tools::getXY(double s, double d, const vector<double> &maps_s, co
 void Tools::sensorFusion(vector< vector<double> > sensor_fusion, vector<double> car, int prev_size)
 {
 	//double dist = 500;
-	double check_speed = 49.5;
+	double check_speed = 49.8;
 
 	// check neighbor lanes
 	vector<int> check_lanes; // contains all nearby lanes
@@ -221,11 +221,17 @@ void Tools::sensorFusion(vector< vector<double> > sensor_fusion, vector<double> 
 		if (dist<lane_distances[l]) {
 		  lane_distances.begin()[l] = dist;
 		}
+		// check if a lane change will be save
+		if (check_car_s > (car[2]-10) && check_car_s < (car[2]+5)) {
+		  // there is a car next to my car in the lane
+		  // so this lane is no candidate for lane change
+		  lane_distances.begin()[l] = 0;
+		} 
 	      }
 	    }
 	  }
 	}
-	cout << "Lane distances computed" << endl;
+	//cout << "Lane distances computed" << endl;
 	
 	// choose best_lane
 	int best_lane = lane;
@@ -237,11 +243,8 @@ void Tools::sensorFusion(vector< vector<double> > sensor_fusion, vector<double> 
 	  }
 	}
 	
-	if (dist_current_lane > 50) {
-	  best_lane = lane;
-	} 
-	else {
-	  double best_distance = 50;
+	double best_distance = 30;
+	if (dist_current_lane < best_distance) {
 	  for (int i=0; i<lane_distances.size(); i++) {
 	    if (check_lanes[i] != lane) {
 	      double dist = lane_distances[i];
@@ -271,7 +274,7 @@ void Tools::sensorFusion(vector< vector<double> > sensor_fusion, vector<double> 
 	      ref_vel += max_delta;
 	    }
 	  }
-	  else if (ref_vel < 49.5) {
+	  else if (ref_vel < 49.8) {
 	    ref_vel += max_delta;
 	  }  
 	}
