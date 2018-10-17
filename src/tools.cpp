@@ -1,6 +1,7 @@
 // Helper functions for Path Planning Project
 
 #include "tools.h"
+#include <iostream>
 
 using std::vector;
 
@@ -171,29 +172,112 @@ vector<double> Tools::getXY(double s, double d, const vector<double> &maps_s, co
 
 // -------------------------------------------------------------------------------------------
 // Sensor Fusion
-bool Tools::sensorFusion(vector< vector<double> > sensor_fusion, vector<double> car, int prev_size)
+void Tools::sensorFusion(vector< vector<double> > sensor_fusion, vector<double> car, int prev_size)
 {
-	bool too_close = false; // is car is to close to another car
-	
-	// find ref_v to use
-	for (int i=0; i< sensor_fusion.size(); i++) {
-	  // car is in my lane
-	  float d = sensor_fusion[i][6];
-	  if(d < (2+4*lane+2) && d > (2+4*lane-2) ) {
-	    double vx = sensor_fusion[i][3];
-	    double vy = sensor_fusion[i][4];
-	    double check_speed = sqrt(pow(vx,2)+pow(vy,2));
-	    double check_car_s = sensor_fusion[i][5];
+	//double dist = 500;
+	double check_speed = 49.5;
 
-	    check_car_s += ((double)prev_size*0.02*check_speed);
-	    // check s values greater than mine and s gap
-	    if((check_car_s > car[2]) && ((check_car_s-car[2]) < 30) ) {
-	      too_close = true;
+	// check neighbor lanes
+	vector<int> check_lanes; // contains all nearby lanes
+	int number_of_lanes = 3;
+	for (int i=0; i<number_of_lanes;i++) {
+	  // check if the lane is the current lane, or left, or right of the current lane
+	  if(i == (lane-1) || i == lane || i == (lane+1)) {
+	    check_lanes.push_back(i);
+	    cout << "New Lane to check: " << i << endl;
+	  }
+	}
+
+	// get the distances to other cars in the check_lanes
+	vector<double> lane_distances;
+	// set the distances to 500.0
+	for (int i=0; i<check_lanes.size();i++) {
+	  lane_distances.push_back(500.0);
+	}
+	cout << "lane distances set to 500" << endl;
+	// check for each car around our car
+	for (int i=0; i< sensor_fusion.size(); i++) {
+	  cout << "check sensor_fusion for car " << i << endl;
+	  // get the distance from the middle of the street to see in which lane the car is
+	  float d = sensor_fusion[i][6];
+	  // check distances for all neighbor lanes and the current lane
+	  for (int l=0; l<check_lanes.size(); l++) {
+	    cout << "check lane " << l << endl;
+	    // if the checked car is in the lane
+	    if(d < (2+4*check_lanes[l]+2) && d > (2+4*check_lanes[l]-2) ) {
+	      // calculate the velocity
+	      double vx = sensor_fusion[i][3];
+	      double vy = sensor_fusion[i][4];
+	      check_speed = sqrt(pow(vx,2)+pow(vy,2));
+	      // get the s value of the car
+	      double check_car_s = sensor_fusion[i][5];
+	      // add the driven s value in 0.02 seconds
+	      check_car_s += ((double)prev_size*0.02*check_speed);
+	      // check if car is in front of my car
+	      if(check_car_s > car[2]) {
+	        // calculate the distance to my car in s direction
+		double dist = check_car_s-car[2];
+		// if the distance is shorter, than to another car, set the distance to the shortest
+		if (dist<lane_distances[l]) {
+		  lane_distances.begin()[l] = dist;
+		}
+	      }
+	    }
+	  }
+	}
+	cout << "Lane distances computed" << endl;
+	
+	// choose best_lane
+	int best_lane = lane;
+	// find dinstance in current lane
+	double dist_current_lane;
+	for (int i=0; i<check_lanes.size();i++) {
+	  if (check_lanes[i] == lane) {
+	    dist_current_lane = lane_distances[i];
+	  }
+	}
+	
+	if (dist_current_lane > 50) {
+	  best_lane = lane;
+	} 
+	else {
+	  double best_distance = 50;
+	  for (int i=0; i<lane_distances.size(); i++) {
+	    if (check_lanes[i] != lane) {
+	      double dist = lane_distances[i];
+	      if (dist > best_distance) {
+	        best_distance = dist;
+		best_lane = check_lanes[i];
+	      }
 	    }
 	  }
 	}
 	
-	return too_close;
+	// check if best_lane is free
+	// TODO
+	cout << "best lane: " << best_lane << ", ref_vel: " << ref_vel << endl;
+	if (best_lane == lane) {
+	  double max_delta = 0.224;
+	  double new_vel;
+	  //double dist = lane_distances[lane];
+	  if (dist_current_lane < 25) {
+	    ref_vel -= max_delta;
+	  }
+	  else if (dist_current_lane < 35) {
+	    if(check_speed < ref_vel) {
+	      ref_vel -=max_delta;
+	    }
+	    else {
+	      ref_vel += max_delta;
+	    }
+	  }
+	  else if (ref_vel < 49.5) {
+	    ref_vel += max_delta;
+	  }  
+	}
+	else {
+	  lane = best_lane;
+	}
 }
 
 
