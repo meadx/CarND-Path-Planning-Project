@@ -12,7 +12,6 @@ My car can drive more than 4.32 miles without incident. Recent incidents where:
 2.  Total acceleration higher than 10m/s^2.
 These 2 incidents and soltions will be discused in the relevant criteria.
 
-##################################################################################################
 
 Criteria: The car drives according to the speed limit.
 ------------------------------------------------------
@@ -30,7 +29,6 @@ The speed limit is 50 mph and in worst case my set velocity 49.699 mph + 0.224 m
 (49.699 mph is the highest possible velocity lower than 49.7 mph and 0.224 mph is the highest
   possible change per 0.02 secounds -> see the following criteria)
 
-##################################################################################################
 
 Criteria: Max Acceleration and Jerk are not Exceeded.
 ------------------------------------------------------
@@ -38,7 +36,6 @@ Max. Acceleration and Jerk are not Exceeded when the velocity changes not more t
 This value is set in tools.cpp in sensorFusion() in line 268.
 Incident 2 happend only 1 time and was not repeatable. In all other cases the max Acceleration and Jerk were not Exceeded.
 
-##################################################################################################
 
 Criteria: Car does not have collisions.
 ---------------------------------------
@@ -55,7 +52,6 @@ In case 2 i reduce the velocity like mentioned in the criteria of the speed limi
 25 meters won't be enough to break down, when there is a really slow or staying vehicle,
 so this is something I could improve in my code. But in the simulator there aren't really slow cars.
 
-##################################################################################################
 
 Criteria: The car stays in its lane, except for the time between changing lanes.
 --------------------------------------------------------------------------------
@@ -67,7 +63,6 @@ These values can be calculated by the formular 2 + 4 * lane.
 So my main waypoints will be calculated dependent to the best lane in tools.cpp in planPath()
 in lines 348 to 353.
 
-##################################################################################################
 
 Criteria: The car is able to change lanes
 -----------------------------------------
