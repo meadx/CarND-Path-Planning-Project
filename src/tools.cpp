@@ -12,7 +12,7 @@ Tools::~Tools() {}
 // -------------------------------------------------------------------------------------------
 void Tools::init() {
   this->lane = 1;
-  this->ref_vel = 49.8;
+  this->ref_vel = 0.0;
 }
 
 
@@ -174,110 +174,123 @@ vector<double> Tools::getXY(double s, double d, const vector<double> &maps_s, co
 // Sensor Fusion
 void Tools::sensorFusion(vector< vector<double> > sensor_fusion, vector<double> car, int prev_size)
 {
-	//double dist = 500;
 	double check_speed = 49.8;
 
-	// check neighbor lanes
-	vector<int> check_lanes; // contains all nearby lanes
-	int number_of_lanes = 3;
+	// Step 1: Calculate all possible lanes ------------------------------------------
+	// These are the current, and maybe the left and/or right lane
+	vector<int> check_lanes; // all possible lanes will be written into the vector
+	int number_of_lanes = 3; // total number of lanes in one direction
 	for (int i=0; i<number_of_lanes;i++) {
 	  // check if the lane is the current lane, or left, or right of the current lane
 	  if(i == (lane-1) || i == lane || i == (lane+1)) {
-	    check_lanes.push_back(i);
-	    cout << "New Lane to check: " << i << endl;
+	    check_lanes.push_back(i); // write lane into check_lanes
 	  }
 	}
 
-	// get the distances to other cars in the check_lanes
-	vector<double> lane_distances;
-	// set the distances to 500.0
+	// Step 2: Get the distances to other cars in the possible lanes -----------------
+	vector<double> lane_distances; // for the shortest distances to other cars of each lane
+	vector<double> lane_vel; // for the velocity of the nearest car
+	// initally set the shortest distance to 500.0 and the velocity to 0.0 for each lane
 	for (int i=0; i<check_lanes.size();i++) {
 	  lane_distances.push_back(500.0);
+	  lane_vel.push_back(0.0);
 	}
-	cout << "lane distances set to 500" << endl;
-	// check for each car around our car
+	
+	// Go through all detected cars in sensor fusion
 	for (int i=0; i< sensor_fusion.size(); i++) {
-	  cout << "check sensor_fusion for car " << i << endl;
 	  // get the distance from the middle of the street to see in which lane the car is
 	  float d = sensor_fusion[i][6];
-	  // check distances for all neighbor lanes and the current lane
+	  // Go through all possible lanes
 	  for (int l=0; l<check_lanes.size(); l++) {
-	    cout << "check lane " << l << endl;
-	    // if the checked car is in the lane
+	    // Check if the checked car is in the lane
 	    if(d < (2+4*check_lanes[l]+2) && d > (2+4*check_lanes[l]-2) ) {
-	      // calculate the velocity
+	      // calculate the velocity of the car
 	      double vx = sensor_fusion[i][3];
 	      double vy = sensor_fusion[i][4];
 	      check_speed = sqrt(pow(vx,2)+pow(vy,2));
 	      // get the s value of the car
 	      double check_car_s = sensor_fusion[i][5];
-	      // add the driven s value in 0.02 seconds
+	      // add the driven s value in 0.02 seconds to get the estimated current position
 	      check_car_s += ((double)prev_size*0.02*check_speed);
 	      // check if car is in front of my car
 	      if(check_car_s > car[2]) {
 	        // calculate the distance to my car in s direction
 		double dist = check_car_s-car[2];
-		// if the distance is shorter, than to another car, set the distance to the shortest
+		// if the distance is shorter, than to another detected car in this lane
+		// set this distance as the shortest
 		if (dist<lane_distances[l]) {
 		  lane_distances.begin()[l] = dist;
+		  lane_vel.begin()[l] = check_speed;
 		}
-		// check if a lane change will be save
-		if (check_car_s > (car[2]-10) && check_car_s < (car[2]+5)) {
-		  // there is a car next to my car in the lane
-		  // so this lane is no candidate for lane change
-		  lane_distances.begin()[l] = 0;
-		} 
+	      }
+	      // check if a lane change will be save for changing
+	      if (check_car_s > (car[2]-8) && check_car_s < (car[2]+5) && l != lane) {
+	        // there is a car next to my car in the lane
+	        // so this lane is no candidate for lane change
+	        lane_distances.begin()[l] = 0.0;
+	        cout << "THERE IS A CAR NEXT TO MINE IN LANE " << l << endl; 
 	      }
 	    }
 	  }
 	}
-	//cout << "Lane distances computed" << endl;
 	
-	// choose best_lane
-	int best_lane = lane;
-	// find dinstance in current lane
+	// Step 3: Choose the best lane ---------------------------------------------------
+	// find dinstance and velocity in current lane
 	double dist_current_lane;
+	double vel_current_lane;
 	for (int i=0; i<check_lanes.size();i++) {
 	  if (check_lanes[i] == lane) {
 	    dist_current_lane = lane_distances[i];
+	    vel_current_lane = lane_vel[i];
 	  }
 	}
 	
-	double best_distance = 30;
+	double best_distance = 30; // initally set the best distance to 30
+	int best_lane = lane;
+	// check if there is a other car in the distance of 30 in the current lane
+	// otherwise the current lane will be the best lane
 	if (dist_current_lane < best_distance) {
+	  best_distance = dist_current_lane; // set the best distance to the distance in the current lane
+	  // check the other lanes
 	  for (int i=0; i<lane_distances.size(); i++) {
 	    if (check_lanes[i] != lane) {
 	      double dist = lane_distances[i];
+	      // check if the distance in the other lane is better than the distance in the best lane
 	      if (dist > best_distance) {
-	        best_distance = dist;
-		best_lane = check_lanes[i];
+	        best_distance = dist; // set the best distance to the distance in this lane
+		best_lane = check_lanes[i]; // set this lane as the best lane
 	      }
 	    }
 	  }
 	}
-	
-	// check if best_lane is free
-	// TODO
-	cout << "best lane: " << best_lane << ", ref_vel: " << ref_vel << endl;
+
+	// Step 4: Change velocity if there is a car in front and no lane change is possible
+	// Only when ther is no lane change
 	if (best_lane == lane) {
-	  double max_delta = 0.224;
+	  double max_delta = 0.224; // calculated from the max acceleration
 	  double new_vel;
-	  //double dist = lane_distances[lane];
-	  if (dist_current_lane < 25) {
+	  double max_vel = 49.5; // max allowed velocity
+	  // If the distance is shorter than 5 reduce velocity
+	  if (dist_current_lane<5 ) {
 	    ref_vel -= max_delta;
 	  }
-	  else if (dist_current_lane < 35) {
-	    if(check_speed < ref_vel) {
-	      ref_vel -=max_delta;
+	  // if the distance is shorter than 25
+	  else if (dist_current_lane < 25) {
+	    // if the velocity is lower than mine
+	    if(vel_current_lane < ref_vel) {
+	      ref_vel -=max_delta; // reduce my velocity
 	    }
-	    else {
-	      ref_vel += max_delta;
+	    // if the velocity is higher than mine and my velocity is lower than the max velocity
+	    else if (ref_vel < max_vel) {
+	      ref_vel += max_delta; // increase my velocity
 	    }
 	  }
-	  else if (ref_vel < 49.8) {
-	    ref_vel += max_delta;
+	  // if the distance is 25 or higher and my velocity is lower than the max velocity
+	  else if (ref_vel < max_vel) {
+	    ref_vel += max_delta; // increase my velocity
 	  }  
 	}
+	// otherwise set the best lane as current lane
 	else {
 	  lane = best_lane;
 	}
