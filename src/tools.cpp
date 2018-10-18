@@ -174,8 +174,6 @@ vector<double> Tools::getXY(double s, double d, const vector<double> &maps_s, co
 // Sensor Fusion
 void Tools::sensorFusion(vector< vector<double> > sensor_fusion, vector<double> car, int prev_size)
 {
-	double check_speed = 49.8;
-
 	// Step 1: Calculate all possible lanes ------------------------------------------
 	// These are the current, and maybe the left and/or right lane
 	vector<int> check_lanes; // all possible lanes will be written into the vector
@@ -203,11 +201,11 @@ void Tools::sensorFusion(vector< vector<double> > sensor_fusion, vector<double> 
 	  // Go through all possible lanes
 	  for (int l=0; l<check_lanes.size(); l++) {
 	    // Check if the checked car is in the lane
-	    if(d < (2+4*check_lanes[l]+2) && d > (2+4*check_lanes[l]-2) ) {
+	    if(d < (5+4*check_lanes[l]) && d > (-1+4*check_lanes[l]) ) {
 	      // calculate the velocity of the car
 	      double vx = sensor_fusion[i][3];
 	      double vy = sensor_fusion[i][4];
-	      check_speed = sqrt(pow(vx,2)+pow(vy,2));
+	      double check_speed = sqrt(pow(vx,2)+pow(vy,2));
 	      // get the s value of the car
 	      double check_car_s = sensor_fusion[i][5];
 	      // add the driven s value in 0.02 seconds to get the estimated current position
@@ -269,7 +267,7 @@ void Tools::sensorFusion(vector< vector<double> > sensor_fusion, vector<double> 
 	if (best_lane == lane) {
 	  double max_delta = 0.224; // calculated from the max acceleration
 	  double new_vel;
-	  double max_vel = 49.5; // max allowed velocity
+	  double max_vel = 49.7; // max allowed velocity
 	  // If the distance is shorter than 5 reduce velocity
 	  if (dist_current_lane<5 ) {
 	    ref_vel -= max_delta;
@@ -301,21 +299,21 @@ void Tools::sensorFusion(vector< vector<double> > sensor_fusion, vector<double> 
 // Plan the path
 vector<pair <double, double> > Tools::planPath(vector<double> car, vector<double> previous_path_x, vector<double> previous_path_y, vector<double> map_waypoints_x, vector<double> map_waypoints_y, vector<double> map_waypoints_s)
 {
-	//Tools tools;
-	//ref_vel = 49.5;
+	// Source: parts of this code are from Aaron Brown from the Project Q&A
+	
+	// Calculate the size of the previous path
 	int prev_size = previous_path_x.size();
 	
-	// Create a list of widely spaced (x,y) waypoints, evenly spaced at 30m
-	// Later we will interpolate these waypoints with a spline and fill it in with more points
+	// Step 1: Create a list of widely spaced (x,y) waypoints --------------------
 	vector<double> ptsx;
 	vector<double> ptsy;
 		
-	// reference x,y, yaw state
+	// reference x,y, yaw state of my car
 	double ref_x = car[0];
 	double ref_y = car[1];
 	double ref_yaw = deg2rad(car[4]);
 
-	// if previous size is almost empty, use the car as starting reference
+	// if previous path is almost empty, use the car as starting reference
 	if(prev_size < 2) {
 	  //use 2 points, that make the path tangent to the car
 	  double prev_car_x = car[0] - cos(car[4]);
@@ -353,7 +351,8 @@ vector<pair <double, double> > Tools::planPath(vector<double> car, vector<double
 							map_waypoints_x,map_waypoints_y);
 	vector<double> next_wp2 = getXY(car[2]+90,(2+4*lane),map_waypoints_s,
 							map_waypoints_x,map_waypoints_y);
-
+	
+	// push that points into ptsx and ptsy
 	ptsx.push_back(next_wp0[0]);
 	ptsx.push_back(next_wp1[0]);
 	ptsx.push_back(next_wp2[0]);
@@ -362,8 +361,7 @@ vector<pair <double, double> > Tools::planPath(vector<double> car, vector<double
 	ptsy.push_back(next_wp1[1]);
 	ptsy.push_back(next_wp2[1]);
 
-	// ----------------------------
-	// Convert ptsx and ptsy to local coordinate system
+	// Step 2: Convert the points to the local coordinate system ---------------
 	for(int i=0; i<ptsx.size(); i++) {
 	  // shift car reference angle to 0 degrees
 	  double shift_x = ptsx[i]-ref_x;
@@ -373,28 +371,13 @@ vector<pair <double, double> > Tools::planPath(vector<double> car, vector<double
 	  ptsy[i] = (shift_x*sin(0-ref_yaw)+shift_y*cos(0-ref_yaw));
 	}		
 
-	// create a spline
+	// Step 3: Smooth the path and create new points with spline --------------
 	tk::spline s;
 
-	/*
-	// sort ptsx and ptsy for set_points
-	// source: www.quora.com/How-do-I-sort-array-of-pair-int-int-in-C++-according-to-the-first-and-the-second-elemen
-	vector<pair <double, double> > pts;
-	for(int i=0; i<ptsx.size(); i++) {
-	  cout << "ptsx before: " << ptsx[i] << endl;
-	  pts.push_back(make_pair(ptsx[i], ptsy[i]));
-	}
-	sort(pts.begin(),pts.end());
-	for(int i=0; i<pts.size(); i++) {
-	  ptsx[i] = pts[i].first;
-	  cout << "ptsx after: " << ptsx[i] << endl;
-	  ptsy[i] = pts[i].second;
-	}*/
-
-	// set (x,y) points to the spline
+	// set calculated waypoints to the spline
 	s.set_points(ptsx, ptsy);
 
-	// Define the actual (x,y) points we will use for the planner
+	// Define vectors for the new waypoints
 	vector<double> next_x_vals;
 	vector<double> next_y_vals;
 
@@ -404,39 +387,44 @@ vector<pair <double, double> > Tools::planPath(vector<double> car, vector<double
 	  next_y_vals.push_back(previous_path_y[i]);
 	}
 
-	// Calculate how to break up sline points so that we travel at our desired
-	double target_x = 30.0;
-	double target_y = s(target_x);
-	double target_dist = sqrt(pow(target_x,2)+pow(target_y,2));
+	// Calculate how to break up sline points so that we travel at our desired velocity
+	double target_x = 30.0; // points are in a distance of 30 m
+	double target_y = s(target_x); // get the y value of the giveb x value
+	double target_dist = sqrt(pow(target_x,2)+pow(target_y,2)); // calulate the distance between these points
 
+	// start at the x position of 0
 	double x_add_on = 0;
 
 	// Fill up the rest of our path planner after filling it with previous points
 	for(int i = 1; i <= 50-previous_path_x.size(); i++) {
+	  // the distance between the points is dependent to the velocity
 	  double N = (target_dist/(0.02*ref_vel/2.24));
-	  double x_point = x_add_on + (target_x)/N;
-	  double y_point = s(x_point);
+	  double x_point = x_add_on + (target_x)/N; // set new x position
+	  double y_point = s(x_point); // get the y value of the calculated x value
 
-	  x_add_on = x_point;
+	  x_add_on = x_point; 
 
+	  // Rotate back to the old coordinate system
 	  double x_ref = x_point;
 	  double y_ref = y_point;
 
-	  // rotate back to normal after rotating it earlier
 	  x_point = (x_ref*cos(ref_yaw)-y_ref*sin(ref_yaw));
 	  y_point = (x_ref*sin(ref_yaw)+y_ref*cos(ref_yaw));
 
 	  x_point += ref_x;
 	  y_point += ref_y;
 
+	  // push the point to the vector of the next values
 	  next_x_vals.push_back(x_point);
 	  next_y_vals.push_back(y_point);
 	}
 
+	// make a pair of x and y values
 	vector<pair <double, double> > next_vals;
 	for(int i=0; i<next_x_vals.size(); i++) {
 	  next_vals.push_back(make_pair(next_x_vals[i],next_y_vals[i]));
 	}
 	
+	// return the caluclated values
 	return next_vals;
 }

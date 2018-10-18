@@ -78,13 +78,8 @@ int main() {
   	map_waypoints_dy.push_back(d_y);
   }
   
-  // initially car is on lane the middle lane 1 - lane 0 is the left lane - lane 2 is the right lane
-  //int lane = 1; 
-
-  // reference velocitiy in mph
-  //double ref_vel = 49.5;  // TODO ist doppelt!
-
-  // tools, lane, ref_vel added
+  
+  // tools added
   h.onMessage([&tools,&map_waypoints_x,&map_waypoints_y,&map_waypoints_s,&map_waypoints_dx,&map_waypoints_dy](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
                      uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
@@ -127,7 +122,7 @@ int main() {
 
           	json msgJson;
 
-		// TODO: define a path made up of (x,y) points that the car will visit sequentially every .02 seconds
+		// define a path made up of (x,y) points that the car will visit sequentially every .02 seconds
 		// -----------------------------------------------------------------------------------
 		// Start of my code
 		// Length of the previous path
@@ -139,19 +134,15 @@ int main() {
 		}
 
 		// ----------------------------------------------------------------------------------------
-		// Sensor Fusion
-		// true if car is to close to another car
-		bool too_close = tools.sensorFusion(sensor_fusion, car, prev_size); 
+		// Step 1: Sensor Fusion
+		// changes lane if necessary and possible
+		// changes the velocity if necessary
+		tools.sensorFusion(sensor_fusion, car, prev_size); 
 		
-		if(too_close) {
-		  tools.ref_vel -= 0.224;
-		}
-		else if(tools.ref_vel < 49.5) {
-		  tools.ref_vel += .224;
-		}
-
+		
 		// --------------------------------------------------------------------------------------
-		// Path Planning
+		// Step 2: Path Planning
+		// plans a smoth path for my car with the calculated velocity
 		vector<double> next_x_vals;
 		vector<double> next_y_vals;
  		auto next_vals = tools.planPath(car,previous_path_x,previous_path_y,map_waypoints_x,map_waypoints_y,map_waypoints_s);
