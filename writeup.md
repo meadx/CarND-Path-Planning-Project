@@ -73,3 +73,14 @@ Otherwise I check, which neighbor lane has a higher distance than the current la
 the highest distance to a car running ahead, if there are 2 possibilities (lines 251 to 262).
 If a change is not secure the distance of this lane won't be choosen, because it was set to 0.
 (see criteria: Car does not have collisions)
+
+Criteria: There is a reflection on how to generate paths.
+---------------------------------------------------------
+The paths are generated in tools.cpp in planPath().
+Parts of the code are from Aaron Brown from the Project Q&A.
+If the previous path is almost empty, I use the car as starting reference.
+Otherwise the previous path's end point is used as starting reference.
+Now I add 3 evenly 30m spaced points ahead of the starting reference and
+convert the points to the local coordinate system.
+Then I smooth the path and create new points with spline in step 3.
+Afer rotating back to the old coordinate system the generation of the path is done.
